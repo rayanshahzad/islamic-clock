@@ -65,7 +65,7 @@
             display: flex;
             align-items: center;
             gap: 14px;
-            margin-bottom: 16px;
+            margin-bottom: 8px;
         }
         .bism-line      { flex:1; height:1px; background: linear-gradient(to right, transparent, rgba(201,168,76,0.55)); }
         .bism-line.rev  { background: linear-gradient(to left, transparent, rgba(201,168,76,0.55)); }
@@ -74,26 +74,30 @@
         /* Time */
         .time-row {
             display: flex;
-            align-items: flex-end;
             justify-content: center;
-            gap: 12px;
-            margin-bottom: 28px;
+            margin-bottom: 2px;
         }
         #main-time {
             font-family: 'Playfair Display', serif;
-            font-size: 234px;
+            font-size: 254px;
             font-weight: 700;
             color: #f0e7d8;
-            letter-spacing: -11px;
+            letter-spacing: -12px;
             line-height: 1;
+        }
+        /* AM/PM now sits below the time on its own line */
+        .ampm-row {
+            text-align: center;
+            width: 100%;
+            margin-bottom: 20px;
         }
         #main-ampm {
             font-family: 'Playfair Display', serif;
-            font-size: 58px;
+            font-size: 38px;
             font-weight: 600;
             color: #c9a84c;
+            letter-spacing: 10px;
             line-height: 1;
-            padding-bottom: 26px;
         }
 
         /* Dates */
@@ -145,7 +149,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            margin: 20px 0;
+            margin: 14px 0;
         }
         .div-line    { height:1px; flex:1; background: linear-gradient(to right, rgba(201,168,76,0.45), transparent); }
         .div-diamond { width:5px; height:5px; background:rgba(201,168,76,0.5); transform:rotate(45deg); flex-shrink:0; }
@@ -338,6 +342,8 @@
 
         <div class="time-row">
             <span id="main-time">--:--</span>
+        </div>
+        <div class="ampm-row">
             <span id="main-ampm">--</span>
         </div>
 
