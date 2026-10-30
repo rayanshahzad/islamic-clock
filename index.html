@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Islamic Desk Clock</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #07101d;
+            background-image:
+                radial-gradient(ellipse 55% 65% at 18% 50%, rgba(14,158,140,0.11) 0%, transparent 65%),
+                radial-gradient(ellipse 45% 55% at 82% 50%, rgba(201,168,76,0.09) 0%, transparent 65%),
+                radial-gradient(rgba(201,168,76,0.065) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 24px 24px;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Fixed 1280×720 canvas — JS scales it to fit any screen */
+        #clock-root {
+            width: 1280px;
+            height: 720px;
+            display: grid;
+            grid-template-columns: 720px 560px;
+            position: relative;
+            border: 1px solid rgba(201,168,76,0.22);
+            border-radius: 3px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        /* ==============================
+           LEFT PANEL
+        ============================== */
+        .left-panel {
+            padding: 44px 52px 44px 64px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-right: 1px solid rgba(255,255,255,0.07);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .left-panel::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 44%;
+            transform: translate(-50%, -50%);
+            width: 460px; height: 460px;
+            background: radial-gradient(circle, rgba(201,168,76,0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        /* بسم الله ornament */
+        .bismillah {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+        .bism-line      { flex:1; height:1px; background: linear-gradient(to right, transparent, rgba(201,168,76,0.55)); }
+        .bism-line.rev  { background: linear-gradient(to left, transparent, rgba(201,168,76,0.55)); }
+        .bism-text      { font-size:19px; color:rgba(201,168,76,0.75); letter-spacing:3px; user-select:none; }
+
+        /* Time */
+        .time-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        #main-time {
+            font-family: 'Playfair Display', serif;
+            font-size: 178px;
+            font-weight: 700;
+            color: #f0e7d8;
+            letter-spacing: -7px;
+            line-height: 0.88;
+        }
+        #main-ampm {
+            font-family: 'Playfair Display', serif;
+            font-size: 50px;
+            font-weight: 600;
+            color: #c9a84c;
+            line-height: 1;
+            padding-bottom: 20px;
+        }
+
+        /* Dates */
+        #main-date {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 3.5px;
+            color: rgba(240,231,216,0.58);
+            text-transform: uppercase;
+        }
+        #hijri-date {
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 3px;
+            color: #c9a84c;
+            text-transform: uppercase;
+            margin-top: 6px;
+            opacity: 0.88;
+        }
+
+        /* Quranic ayat — changes every hour */
+        .ayat-section {
+            margin-top: 14px;
+            padding-top: 13px;
+            border-top: 1px solid rgba(201,168,76,0.18);
+        }
+        #ayat-text {
+            display: block;
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 13px;
+            color: rgba(240,231,216,0.48);
+            line-height: 1.55;
+        }
+        #ayat-ref {
+            display: block;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: rgba(201,168,76,0.55);
+            margin-top: 5px;
+        }
+
+        /* Divider */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .div-line    { height:1px; flex:1; background: linear-gradient(to right, rgba(201,168,76,0.45), transparent); }
+        .div-diamond { width:5px; height:5px; background:rgba(201,168,76,0.5); transform:rotate(45deg); flex-shrink:0; }
+
+        /* Bottom row: weather + countdown */
+        .bottom-row {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+        }
+
+        .weather-card {
+            flex: 1;
+            background: rgba(255,255,255,0.035);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 18px;
+            padding: 18px 22px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+        .weather-icon-ring {
+            width: 62px; height: 62px;
+            border-radius: 50%;
+            background: rgba(201,168,76,0.1);
+            border: 1px solid rgba(201,168,76,0.22);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        #weather-icon { width:46px; height:46px; object-fit:contain; }
+        #weather-temp {
+            font-size: 42px;
+            font-weight: 800;
+            color: #f0e7d8;
+            letter-spacing: -1.5px;
+            line-height: 1;
+        }
+        #weather-location {
+            font-size: 10px; font-weight:700; letter-spacing:3px;
+            color: #c9a84c; text-transform:uppercase; margin-top:5px;
+        }
+        #weather-desc {
+            font-size: 11px; color:rgba(240,231,216,0.4);
+            margin-top:3px; text-transform:capitalize;
+        }
+
+        /* Countdown circle */
+        .countdown-circle {
+            width: 148px; height: 148px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #c9a84c 0%, #8b6a14 100%);
+            box-shadow: 0 0 0 4px rgba(201,168,76,0.18),
+                        0 0 36px rgba(201,168,76,0.3),
+                        0 0 72px rgba(201,168,76,0.1);
+            display: flex; flex-direction:column;
+            align-items:center; justify-content:center;
+        }
+        #next-prayer-title {
+            font-size:8.5px; font-weight:700; letter-spacing:2.5px;
+            color:rgba(255,255,255,0.62); text-transform:uppercase;
+        }
+        #next-prayer-name {
+            font-size:15px; font-weight:800; color:#fff;
+            letter-spacing:2px; text-transform:uppercase; margin:4px 0 0;
+        }
+        .cd-nums { display:flex; align-items:baseline; gap:3px; margin-top:2px; }
+        #countdown-mins {
+            font-family: 'Playfair Display', serif;
+            font-size:42px; font-weight:700; color:#fff; line-height:1;
+        }
+        .cd-unit {
+            font-size:8.5px; font-weight:700;
+            color:rgba(255,255,255,0.62); letter-spacing:1.5px; text-transform:uppercase;
+        }
+
+        /* ==============================
+           RIGHT PANEL
+        ============================== */
+        .right-panel {
+            padding: 46px 54px 46px 44px;
+            display: flex; flex-direction:column; justify-content:center;
+        }
+
+        .prayer-heading {
+            display: flex; align-items:center; gap:14px; margin-bottom:20px;
+        }
+        .ph-label {
+            font-size:10px; font-weight:700; letter-spacing:5px;
+            color:#c9a84c; text-transform:uppercase; white-space:nowrap;
+        }
+        .ph-line {
+            flex:1; height:1px;
+            background: linear-gradient(to right, rgba(201,168,76,0.35), transparent);
+        }
+
+        #prayer-list-container {
+            display: flex; flex-direction:column; gap:10px;
+        }
+
+        /* Cards set by JS */
+        .prayer-card {
+            background: rgba(255,255,255,0.038);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-left: 3px solid transparent;
+            border-radius: 13px;
+            padding: 16px 20px;
+            display: flex; align-items:center; justify-content:space-between;
+            transition: all 0.5s ease;
+        }
+        .pc-left  { display:flex; align-items:center; gap:13px; }
+        .pc-dot   {
+            width:8px; height:8px; border-radius:50%;
+            background:rgba(255,255,255,0.14); flex-shrink:0;
+            transition: all 0.5s ease;
+        }
+        .pc-name  {
+            font-size: 20px; font-weight:600;
+            color:rgba(240,231,216,0.6); transition:color 0.5s ease;
+        }
+        .pc-time  {
+            font-size: 21px; font-weight:700;
+            color:rgba(240,231,216,0.8); letter-spacing:0.5px;
+            transition:color 0.5s ease;
+        }
+
+        /* Active prayer */
+        .active-prayer {
+            background: linear-gradient(135deg, rgba(201,168,76,0.16), rgba(201,168,76,0.04)) !important;
+            border-color: rgba(201,168,76,0.38) !important;
+            border-left-color: #c9a84c !important;
+            box-shadow: 0 4px 24px rgba(201,168,76,0.1) !important;
+        }
+        .active-prayer .pc-dot  { background:#c9a84c !important; box-shadow:0 0 8px rgba(201,168,76,0.9) !important; }
+        .active-prayer .pc-name { color:#e2c168 !important; font-weight:700 !important; }
+        .active-prayer .pc-time { color:#e2c168 !important; }
+
+        /* Corner SVG ornaments */
+        .corner-ornament { position:absolute; pointer-events:none; opacity:0.13; }
+
+        /* Debug */
+        #debug-log {
+            position:fixed; top:8px; right:8px;
+            background:rgba(180,0,0,0.92); color:#fff;
+            font-size:11px; padding:8px 14px; border-radius:8px;
+            z-index:9999; max-width:300px; display:none;
+        }
+    </style>
+</head>
+<body>
+
+<div id="debug-log"></div>
+
+<div id="clock-root">
+
+    <!-- 8-pointed Islamic star corner ornaments -->
+    <svg class="corner-ornament" style="top:18px;right:18px" width="76" height="76" viewBox="0 0 76 76">
+        <g transform="translate(38,38)" fill="#c9a84c">
+            <polygon points="0,-17 4,-7.7 13.5,-13.5 7.7,-4 17,0 7.7,4 13.5,13.5 4,7.7 0,17 -4,7.7 -13.5,13.5 -7.7,4 -17,0 -7.7,-4 -13.5,-13.5 -4,-7.7"/>
+            <polygon points="0,-23 5.3,-10.5 18.8,-18.8 10.5,-5.3 23,0 10.5,5.3 18.8,18.8 5.3,10.5 0,23 -5.3,10.5 -18.8,18.8 -10.5,5.3 -23,0 -10.5,-5.3 -18.8,-18.8 -5.3,-10.5"
+                  fill="none" stroke="#c9a84c" stroke-width="0.8"/>
+        </g>
+    </svg>
+    <svg class="corner-ornament" style="bottom:18px;left:18px" width="76" height="76" viewBox="0 0 76 76">
+        <g transform="translate(38,38)" fill="#c9a84c">
+            <polygon points="0,-17 4,-7.7 13.5,-13.5 7.7,-4 17,0 7.7,4 13.5,13.5 4,7.7 0,17 -4,7.7 -13.5,13.5 -7.7,4 -17,0 -7.7,-4 -13.5,-13.5 -4,-7.7"/>
+            <polygon points="0,-23 5.3,-10.5 18.8,-18.8 10.5,-5.3 23,0 10.5,5.3 18.8,18.8 5.3,10.5 0,23 -5.3,10.5 -18.8,18.8 -10.5,5.3 -23,0 -10.5,-5.3 -18.8,-18.8 -5.3,-10.5"
+                  fill="none" stroke="#c9a84c" stroke-width="0.8"/>
+        </g>
+    </svg>
+    <svg class="corner-ornament" style="top:18px;left:18px;opacity:0.08" width="40" height="40" viewBox="0 0 40 40">
+        <g transform="translate(20,20)" fill="none" stroke="#c9a84c" stroke-width="1">
+            <polygon points="0,-12 3,-5 9.5,-9.5 5,-3 12,0 5,3 9.5,9.5 3,5 0,12 -3,5 -9.5,9.5 -5,3 -12,0 -5,-3 -9.5,-9.5 -3,-5"/>
+        </g>
+    </svg>
+    <svg class="corner-ornament" style="bottom:18px;right:18px;opacity:0.08" width="40" height="40" viewBox="0 0 40 40">
+        <g transform="translate(20,20)" fill="none" stroke="#c9a84c" stroke-width="1">
+            <polygon points="0,-12 3,-5 9.5,-9.5 5,-3 12,0 5,3 9.5,9.5 3,5 0,12 -3,5 -9.5,9.5 -5,3 -12,0 -5,-3 -9.5,-9.5 -3,-5"/>
+        </g>
+    </svg>
+
+    <!-- ========== LEFT PANEL ========== -->
+    <div class="left-panel">
+
+        <div class="bismillah">
+            <div class="bism-line"></div>
+            <span class="bism-text">بسم الله</span>
+            <div class="bism-line rev"></div>
+        </div>
+
+        <div class="time-row">
+            <span id="main-time">--:--</span>
+            <span id="main-ampm">--</span>
+        </div>
+
+        <div>
+            <div id="main-date">Loading Date...</div>
+            <div id="hijri-date">Loading Hijri...</div>
+        </div>
+
+        <!-- Verse of the hour -->
+        <div class="ayat-section">
+            <span id="ayat-text"></span>
+            <span id="ayat-ref"></span>
+        </div>
+
+        <div class="divider">
+            <div class="div-line"></div>
+            <div class="div-diamond"></div>
+        </div>
+
+        <div class="bottom-row">
+            <div class="weather-card">
+                <div class="weather-icon-ring">
+                    <img id="weather-icon" src="" alt="Weather" style="opacity:0.7">
+                </div>
+                <div>
+                    <div id="weather-temp">--°C</div>
+                    <div id="weather-location">KAUST</div>
+                    <div id="weather-desc">Connecting...</div>
+                </div>
+            </div>
+
+            <div class="countdown-circle">
+                <span id="next-prayer-title">Next Prayer</span>
+                <span id="next-prayer-name">--</span>
+                <div class="cd-nums">
+                    <span id="countdown-mins">--</span>
+                    <span class="cd-unit">MINS</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ========== RIGHT PANEL ========== -->
+    <div class="right-panel">
+
+        <div class="prayer-heading">
+            <span class="ph-label">Prayer Times</span>
+            <div class="ph-line"></div>
+        </div>
+
+        <div id="prayer-list-container">
+            <div class="prayer-card">
+                <span class="pc-name">Waiting for network...</span>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    const LAT = 22.3046;
+    const LON = 39.1044;
+
+    let prayerTimings = {};
+    let currentPrayerName = '';
+
+    // ── Scale to fit any screen size ──────────────────────────────────
+    (function scaleToFit() {
+        const root = document.getElementById('clock-root');
+        function apply() {
+            const s = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+            root.style.transform = `scale(${s})`;
+            root.style.transformOrigin = 'center center';
+        }
+        apply();
+        window.addEventListener('resize', apply);
+    })();
+
+    // ── Quran ayat collection (cycles every hour) ─────────────────────
+    const AYAT = [
+        { text: "Verily, with hardship comes ease.",                                           ref: "94:6" },
+        { text: "Allah does not burden a soul beyond that it can bear.",                       ref: "2:286" },
+        { text: "So remember Me; I will remember you.",                                        ref: "2:152" },
+        { text: "And He found you lost and guided you.",                                       ref: "93:7" },
+        { text: "Indeed, Allah is with those who are patient.",                                ref: "2:153" },
+        { text: "Whoever fears Allah — He will make a way out for him.",                       ref: "65:2" },
+        { text: "And your Lord says, 'Call upon Me; I will respond to you.'",                  ref: "40:60" },
+        { text: "Whoever relies upon Allah — then He is sufficient for him.",                  ref: "65:3" },
+        { text: "And He is with you wherever you are.",                                        ref: "57:4" },
+        { text: "Seek help through patience and prayer.",                                      ref: "2:45"  },
+        { text: "Indeed, prayer prohibits immorality and wrongdoing.",                         ref: "29:45" },
+        { text: "Our Lord, give us good in this world and good in the Hereafter.",             ref: "2:201" },
+        { text: "Do not lose hope, nor be sad. You will be victorious if you are true in faith.", ref: "3:139" },
+        { text: "And Allah is the best of providers.",                                         ref: "62:11" },
+        { text: "So be patient. Indeed, the promise of Allah is truth.",                       ref: "30:60" },
+        { text: "And We have honored the children of Adam.",                                   ref: "17:70" },
+        { text: "Indeed, Allah loves those who act justly.",                                   ref: "49:9"  },
+        { text: "And He found you poor and made you self-sufficient.",                         ref: "93:8"  },
+        { text: "Unquestionably, to Allah belongs whatever is in the heavens and the earth.",  ref: "10:55" },
+        { text: "And it is He who gives life and causes death, and to Him you will be returned.", ref: "10:56" },
+        { text: "Allah — there is no deity except Him, the Ever-Living, the Sustainer of existence.", ref: "2:255" },
+        { text: "And We have certainly made the Quran easy for remembrance.",                  ref: "54:17" },
+        { text: "He knows what is within the heavens and earth and knows what you conceal.", ref: "5:7" },
+        { text: "Speak good, or remain silent.",                                               ref: "Hadith" },
+    ];
+
+    function updateAyat() {
+        const idx = Math.floor(Date.now() / 3_600_000) % AYAT.length;
+        const { text, ref } = AYAT[idx];
+        document.getElementById('ayat-text').textContent = `"${text}"`;
+        document.getElementById('ayat-ref').textContent  = `— ${ref.startsWith('Hadith') ? ref : 'Quran ' + ref}`;
+    }
+
+    // ── Debug helper ──────────────────────────────────────────────────
+    function logError(src, msg) {
+        const el = document.getElementById('debug-log');
+        el.style.display = 'block';
+        el.textContent = `${new Date().toLocaleTimeString()} · ${src}: ${msg}`;
+        console.error(src, msg);
+    }
+
+    // ── Live clock ────────────────────────────────────────────────────
+    function updateClock() {
+        const now = new Date();
+        let h = now.getHours(), m = now.getMinutes();
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12 || 12;
+        document.getElementById('main-time').textContent = `${h}:${m < 10 ? '0' + m : m}`;
+        document.getElementById('main-ampm').textContent = ampm;
+        if (Object.keys(prayerTimings).length) calculateNextPrayer();
+    }
+
+    function fmt12(t24) {
+        let [h, m] = t24.split(':');
+        h = parseInt(h);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12 || 12;
+        return `${h < 10 ? '0' + h : h}:${m} ${ampm}`;
+    }
+
+    // ── Prayer list ───────────────────────────────────────────────────
+    function updatePrayerList() {
+        const container = document.getElementById('prayer-list-container');
+        container.innerHTML = '';
+        const prayers = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+        const isFri = new Date().getDay() === 5;
+        prayers.forEach(p => {
+            const t = prayerTimings[p];
+            if (!t) return;
+            const label = (p === 'Dhuhr' && isFri) ? "Jumu'ah" : p;
+            const card = document.createElement('div');
+            card.id = `prayer-card-${p}`;
+            card.className = 'prayer-card';
+            card.innerHTML = `
+                <div class="pc-left">
+                    <div class="pc-dot"></div>
+                    <span class="pc-name">${label}</span>
+                </div>
+                <span class="pc-time">${fmt12(t)}</span>
+            `;
+            container.appendChild(card);
+        });
+        highlightCurrentPrayer();
+    }
+
+    function highlightCurrentPrayer() {
+        ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].forEach(p => {
+            const card = document.getElementById(`prayer-card-${p}`);
+            if (card) card.classList.toggle('active-prayer', p === currentPrayerName);
+        });
+    }
+
+    // ── Prayer API ────────────────────────────────────────────────────
+    async function fetchPrayerData() {
+        try {
+            // Use allorigins proxy to avoid CORS/mixed-content issues on Pi
+            const target = encodeURIComponent(
+                `https://api.aladhan.com/v1/timings?latitude=${LAT}&longitude=${LON}&method=4`
+            );
+            const res = await fetch(`https://api.allorigins.win/get?url=${target}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const wrapper = await res.json();
+            const data = JSON.parse(wrapper.contents).data;
+            prayerTimings = data.timings;
+
+            const { hijri, gregorian: g } = data.date;
+            document.getElementById('main-date').textContent =
+                `${g.weekday.en}, ${g.month.en} ${g.day}, ${g.year}`.toUpperCase();
+            document.getElementById('hijri-date').textContent =
+                `${hijri.day} ${hijri.month.en} ${hijri.year} AH`.toUpperCase();
+
+            calculateNextPrayer();
+            updatePrayerList();
+            document.getElementById('debug-log').style.display = 'none';
+        } catch (e) {
+            logError('Prayer API', e.message);
+            document.getElementById('prayer-list-container').innerHTML =
+                `<div class="prayer-card"><span class="pc-name" style="color:#e57373">Retrying in 10s...</span></div>`;
+            setTimeout(fetchPrayerData, 10000);
+        }
+    }
+
+    // ── Weather API ───────────────────────────────────────────────────
+    async function fetchWeatherData() {
+        try {
+            const res = await fetch(
+                `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,weather_code&timezone=auto`
+            );
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const d = await res.json();
+            const temp = Math.round(d.current.temperature_2m);
+            const code = d.current.weather_code;
+
+            document.getElementById('weather-temp').textContent = `${temp}°C`;
+
+            let icon = 'https://openweathermap.org/img/wn/01d@2x.png', desc = 'Clear Sky';
+            if      (code >= 1  && code <= 3)  { icon = 'https://openweathermap.org/img/wn/02d@2x.png'; desc = 'Partly Cloudy'; }
+            else if (code >= 45 && code <= 48) { icon = 'https://openweathermap.org/img/wn/50d@2x.png'; desc = 'Foggy'; }
+            else if (code >= 51 && code <= 67) { icon = 'https://openweathermap.org/img/wn/10d@2x.png'; desc = 'Rainy'; }
+            else if (code >= 71 && code <= 77) { icon = 'https://openweathermap.org/img/wn/13d@2x.png'; desc = 'Snowy'; }
+            else if (code >= 80 && code <= 99) { icon = 'https://openweathermap.org/img/wn/11d@2x.png'; desc = 'Thunderstorm'; }
+
+            const img = document.getElementById('weather-icon');
+            img.src = icon;
+            img.style.opacity = '1';
+            document.getElementById('weather-desc').textContent = desc;
+        } catch (e) {
+            logError('Weather', e.message);
+            setTimeout(fetchWeatherData, 10000);
+        }
+    }
+
+    // ── Countdown ─────────────────────────────────────────────────────
+    function calculateNextPrayer() {
+        if (!Object.keys(prayerTimings).length) return;
+        const now = new Date();
+        const cur = now.getHours() * 60 + now.getMinutes();
+        const list = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+        let found = false;
+
+        for (let i = 0; i < list.length; i++) {
+            const [h, m] = prayerTimings[list[i]].split(':').map(Number);
+            const t = h * 60 + m;
+            if (t > cur) {
+                currentPrayerName = i === 0 ? 'Isha' : list[i - 1];
+                if (list[i] === 'Sunrise') {
+                    const [dh, dm] = prayerTimings['Dhuhr'].split(':').map(Number);
+                    document.getElementById('countdown-mins').textContent = (dh * 60 + dm) - cur;
+                    document.getElementById('next-prayer-name').textContent = 'DHUHR';
+                } else {
+                    document.getElementById('countdown-mins').textContent = t - cur;
+                    document.getElementById('next-prayer-name').textContent = list[i].toUpperCase();
+                }
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            currentPrayerName = 'Isha';
+            const [h, m] = prayerTimings['Fajr'].split(':').map(Number);
+            document.getElementById('countdown-mins').textContent = (1440 - cur) + (h * 60 + m);
+            document.getElementById('next-prayer-name').textContent = 'FAJR';
+        }
+
+        highlightCurrentPrayer();
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        updateClock();
+        updateAyat();
+        setInterval(updateClock, 1000);
+        setInterval(updateAyat, 3_600_000);   // rotate ayat every hour
+        fetchPrayerData();
+        fetchWeatherData();
+        setInterval(fetchPrayerData,  3_600_000);
+        setInterval(fetchWeatherData, 3_600_000);
+    });
+</script>
+
+</body>
+</html>
