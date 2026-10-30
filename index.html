@@ -75,41 +75,43 @@
         .time-row {
             display: flex;
             align-items: flex-end;
+            justify-content: center;
             gap: 12px;
             margin-bottom: 14px;
         }
         #main-time {
             font-family: 'Playfair Display', serif;
-            font-size: 196px;
+            font-size: 220px;
             font-weight: 700;
             color: #f0e7d8;
-            letter-spacing: -8px;
+            letter-spacing: -10px;
             line-height: 1;
         }
         #main-ampm {
             font-family: 'Playfair Display', serif;
-            font-size: 54px;
+            font-size: 58px;
             font-weight: 600;
             color: #c9a84c;
             line-height: 1;
-            padding-bottom: 24px;
+            padding-bottom: 26px;
         }
 
         /* Dates */
+        .date-block { text-align: center; width: 100%; }
         #main-date {
-            font-size: 13px;
+            font-size: 16px;
             font-weight: 600;
             letter-spacing: 3.5px;
             color: rgba(240,231,216,0.58);
             text-transform: uppercase;
         }
         #hijri-date {
-            font-size: 13px;
+            font-size: 16px;
             font-weight: 500;
             letter-spacing: 3px;
             color: #c9a84c;
             text-transform: uppercase;
-            margin-top: 6px;
+            margin-top: 7px;
             opacity: 0.88;
         }
 
@@ -118,18 +120,20 @@
             margin-top: 14px;
             padding-top: 13px;
             border-top: 1px solid rgba(201,168,76,0.18);
+            text-align: center;
+            width: 100%;
         }
         #ayat-text {
             display: block;
             font-family: 'Playfair Display', serif;
             font-style: italic;
-            font-size: 13px;
+            font-size: 14px;
             color: rgba(240,231,216,0.48);
             line-height: 1.55;
         }
         #ayat-ref {
             display: block;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 600;
             letter-spacing: 2px;
             color: rgba(201,168,76,0.55);
@@ -337,7 +341,7 @@
             <span id="main-ampm">--</span>
         </div>
 
-        <div>
+        <div class="date-block">
             <div id="main-date">Loading Date...</div>
             <div id="hijri-date">Loading Hijri...</div>
         </div>
