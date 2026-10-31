@@ -74,10 +74,13 @@
         /* Time */
         .time-row {
             display: flex;
-            align-items: flex-end;
             justify-content: center;
-            gap: 10px;
             margin-bottom: 20px;
+        }
+        .time-inner {
+            display: inline-flex;
+            align-items: flex-end;
+            gap: 8px;
         }
         #main-time {
             font-family: 'Playfair Display', serif;
@@ -211,11 +214,13 @@
         #next-prayer-name {
             font-size:17px; font-weight:800; color:#fff;
             letter-spacing:2px; text-transform:uppercase; margin:4px 0 0;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.7), 0 -1px 3px rgba(0,0,0,0.7), 1px 0 3px rgba(0,0,0,0.7), -1px 0 3px rgba(0,0,0,0.7);
         }
         .cd-nums { display:flex; align-items:baseline; gap:3px; margin-top:2px; }
         #countdown-mins {
             font-family: 'Playfair Display', serif;
             font-size:50px; font-weight:700; color:#fff; line-height:1;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.8), 0 -1px 4px rgba(0,0,0,0.8), 1px 0 4px rgba(0,0,0,0.8), -1px 0 4px rgba(0,0,0,0.8);
         }
         .cd-unit {
             font-size:9px; font-weight:700;
@@ -337,8 +342,10 @@
         </div>
 
         <div class="time-row">
-            <span id="main-time">--:--</span>
-            <span id="main-ampm">--</span>
+            <div class="time-inner">
+                <span id="main-time">--:--</span>
+                <span id="main-ampm">--</span>
+            </div>
         </div>
 
         <div class="date-block">
