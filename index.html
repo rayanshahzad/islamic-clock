@@ -85,7 +85,7 @@
         }
         #main-time {
             font-family: 'Nunito', sans-serif;
-            font-size: 254px;
+            font-size: 272px;
             font-weight: 800;
             color: #f0e7d8;
             letter-spacing: -10px;
@@ -455,7 +455,7 @@
     ];
 
     function updateAyat() {
-        const idx = Math.floor(Date.now() / 3_600_000) % AYAT.length;
+        const idx = Math.floor(Date.now() / 1_800_000) % AYAT.length;
         const { text, ref } = AYAT[idx];
         document.getElementById('ayat-text').textContent = `"${text}"`;
         document.getElementById('ayat-ref').textContent  = `— ${ref.startsWith('Hadith') ? ref : 'Quran ' + ref}`;
@@ -621,7 +621,7 @@
         updateClock();
         updateAyat();
         setInterval(updateClock, 1000);
-        setInterval(updateAyat, 3_600_000);   // rotate ayat every hour
+        setInterval(updateAyat, 1_800_000);   // rotate ayat every 30 mins
         fetchPrayerData();
         fetchWeatherData();
         setInterval(fetchPrayerData,  3_600_000);
